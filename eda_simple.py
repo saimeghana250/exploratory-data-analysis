@@ -6,10 +6,8 @@ import seaborn as sns
 import sqlite3
 from matplotlib.backends.backend_pdf import PdfPages
 
-# =================================================================
 # STEP 0: LOAD AND CLEAN THE DATA
-# =================================================================
-# pd.read_excel() imports the Excel file into a DataFrame (a table).
+
 df = pd.read_excel("ApexPlanet_DataAnalytics_Dataset.xlsx", sheet_name="Sales_Dataset")
 
 print("Data loaded:", df.shape, "rows x columns")
@@ -29,29 +27,16 @@ print("Missing values after cleaning:\n", df.isnull().sum().to_string())
 numeric_cols = ["Age", "Quantity", "Unit_Price", "Total_Sales"]
 categorical_cols = ["Gender", "City", "Product", "Category"]
 
-
-# =================================================================
 # STEP 1: DESCRIPTIVE STATISTICS & UNIVARIATE ANALYSIS
-# =================================================================
-# .describe() gives count, mean, std, min, 25/50/75%, max in one line.
+
 desc_stats = df[numeric_cols].describe().round(2)
 print("\nDescriptive statistics:\n", desc_stats)
-
-# value_counts() for each categorical column (saved for printing/Excel later)
 cat_counts = {col: df[col].value_counts() for col in categorical_cols}
 
 
-# =================================================================
 # STEP 2: SQL FOR BUSINESS QUESTIONS
-# =================================================================
-# We load the data into a small in-memory SQLite database, split into
-# 3 related tables (orders / customers / products) so we can practice
-# real multi-table JOINs, then answer 7 business questions.
 
 conn = sqlite3.connect(":memory:")
-
-# Fact table: one row per order. Order_ID has a few duplicate values in
-# the raw file, so we add a clean surrogate key (Order_PK) for SQL use.
 orders = df[["Order_ID", "Order_Date", "Customer_ID", "Product",
              "Quantity", "Unit_Price", "Total_Sales"]].copy()
 orders.insert(0, "Order_PK", range(1, len(orders) + 1))
@@ -141,18 +126,15 @@ for name, sql in queries.items():
 
 conn.close()
 
-
-# =================================================================
 # STEP 3: MULTIVARIATE ANALYSIS & CORRELATION
-# =================================================================
 # Correlation matrix: how strongly each numeric field relates to the others.
+
 correlation_matrix = df[numeric_cols].corr()
 print("\nCorrelation matrix:\n", correlation_matrix.round(2))
 
 
-# =================================================================
 # STEP 4: KPI DASHBOARD SUMMARY (the numbers behind the mock-up)
-# =================================================================
+
 kpi_summary = pd.DataFrame({
     "KPI": ["Total Revenue", "Total Orders", "Avg Order Value",
             "Total Units Sold", "Unique Customers", "Avg Customer Age"],
@@ -168,9 +150,8 @@ kpi_summary = pd.DataFrame({
 print("\nKPI summary:\n", kpi_summary.to_string(index=False))
 
 
-# =================================================================
 # OUTPUT FILE 1: EDA_Results.xlsx
-# =================================================================
+
 # Every table above gets its own sheet in one Excel workbook.
 with pd.ExcelWriter("EDA_Results.xlsx", engine="openpyxl") as writer:
     desc_stats.to_excel(writer, sheet_name="Descriptive_Stats")
@@ -184,11 +165,8 @@ with pd.ExcelWriter("EDA_Results.xlsx", engine="openpyxl") as writer:
 print("\nSaved: EDA_Results.xlsx")
 
 
-# =================================================================
 # OUTPUT FILE 2: EDA_Charts.pdf
-# =================================================================
-# PdfPages lets us save every matplotlib figure as one page of a
-# single PDF, so all charts end up in one file instead of many PNGs.
+
 sns.set_style("whitegrid")
 
 with PdfPages("EDA_Charts.pdf") as pdf:
